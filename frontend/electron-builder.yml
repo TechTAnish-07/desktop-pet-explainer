@@ -1,0 +1,31 @@
+appId: com.desktop.pet.explainer
+productName: Desktop Pet Explainer
+directories:
+  output: release/${version}
+  buildResources: build
+
+files:
+  - dist
+  - dist-electron
+
+extraResources:
+  - from: ../backend/dist/
+    to: backend/
+    filter:
+      - main*
+
+mac:
+  target:
+    - dmg
+    - zip
+  category: public.app-category.productivity
+  hardenedRuntime: false
+
+win:
+  target:
+    - nsis
+    - portable
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true

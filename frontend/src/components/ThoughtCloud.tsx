@@ -1,0 +1,199 @@
+import React, { useState } from 'react'
+import { Copy, Check, X, Sparkles, Send, MessageSquare } from 'lucide-react'
+
+interface ThoughtCloudProps {
+  content: string
+  isStreaming: boolean
+  remainingSeconds: number
+  autoHideSeconds: number
+  isChatActive?: boolean
+  onChatActiveChange?: (active: boolean) => void
+  onSendFollowUp?: (question: string) => void
+  onClose: () => void
+}
+
+export const ThoughtCloud: React.FC<ThoughtCloudProps> = ({
+  content,
+  isStreaming,
+  remainingSeconds,
+  autoHideSeconds,
+  isChatActive,
+  onChatActiveChange,
+  onSendFollowUp,
+  onClose,
+}) => {
+  const [copied, setCopied] = useState(false)
+  const [followUpText, setFollowUpText] = useState('')
+
+  const handleMouseEnter = () => {
+    window.electronAPI?.setIgnoreMouseEvents(false)
+  }
+
+  const handleMouseLeave = () => {
+    window.electronAPI?.setIgnoreMouseEvents(true)
+  }
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(content)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value
+    setFollowUpText(val)
+    onChatActiveChange?.(val.trim().length > 0)
+  }
+
+  const handleSend = (e?: React.FormEvent) => {
+    e?.preventDefault()
+    if (!followUpText.trim()) return
+    const q = followUpText.trim()
+    setFollowUpText('')
+    onChatActiveChange?.(false)
+    onSendFollowUp?.(q)
+  }
+
+  // Convert basic markdown tags safely to styled JSX elements or formatted text
+  const renderFormattedMarkdown = (text: string) => {
+    if (!text) return null
+    const paragraphs = text.split('\n\n')
+
+    return paragraphs.map((para, idx) => {
+      // Heading 3
+      if (para.startsWith('### ')) {
+        return (
+          <h3 key={idx} className="text-sm font-bold text-sky-300 mt-2.5 mb-1.5 flex items-center space-x-1.5">
+            <span className="w-1.5 h-3 bg-sky-400 rounded-full inline-block mr-1"></span>
+            <span>{para.replace('### ', '')}</span>
+          </h3>
+        )
+      }
+      // Bullet items
+      if (para.includes('\n- ') || para.startsWith('- ')) {
+        const lines = para.split('\n')
+        return (
+          <ul key={idx} className="list-none space-y-1.5 my-2 text-xs text-slate-200">
+            {lines.map((line, lIdx) => {
+              if (line.trim().startsWith('- ')) {
+                return (
+                  <li key={lIdx} className="flex items-start space-x-2">
+                    <span className="text-emerald-400 font-bold mt-0.5">•</span>
+                    <span className="flex-1 leading-relaxed">{line.replace('- ', '')}</span>
+                  </li>
+                )
+              }
+              return <p key={lIdx} className="leading-relaxed">{line}</p>
+            })}
+          </ul>
+        )
+      }
+      return (
+        <p key={idx} className="text-xs text-slate-200 leading-relaxed mb-2.5">
+          {para}
+        </p>
+      )
+    })
+  }
+
+  const progressPct = autoHideSeconds > 0 ? (remainingSeconds / autoHideSeconds) * 100 : 0
+
+  return (
+    <div
+      className="relative flex flex-col items-center animate-fadeIn"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      {/* Main Glass Thought Bubble */}
+      <div className="glass-bubble w-[420px] max-w-full rounded-3xl p-4 text-white shadow-2xl relative mb-3 border border-sky-400/35">
+        {/* Top Header Bar */}
+        <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-slate-700/80">
+          <div className="flex items-center space-x-2 text-xs font-bold text-emerald-400">
+            <div className="w-6 h-6 rounded-lg bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center">
+              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+            </div>
+            <span className="tracking-wide text-sky-200">NOVA EXPLANATION</span>
+            {isStreaming && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 animate-pulse">
+                Streaming...
+              </span>
+            )}
+            {isChatActive && !isStreaming && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/20 text-sky-300">
+                Chatting (Pinned open)
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center space-x-1">
+            <button
+              onClick={handleCopy}
+              disabled={!content}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              title="Copy Explanation"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+            </button>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              title="Close Bubble"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Explanation Content Area */}
+        <div className="max-h-56 overflow-y-auto custom-scrollbar pr-1.5 markdown-body">
+          {content ? (
+            renderFormattedMarkdown(content)
+          ) : (
+            <div className="flex items-center justify-center py-8 text-xs text-slate-400 animate-pulse">
+              Nova is analyzing the text...
+            </div>
+          )}
+        </div>
+
+        {/* Interactive Follow-up Chat / Input Bar */}
+        <form onSubmit={handleSend} className="mt-3 pt-2.5 border-t border-slate-700/80 flex items-center space-x-2">
+          <div className="relative flex-1 flex items-center">
+            <MessageSquare className="w-3.5 h-3.5 text-sky-400 absolute left-2.5" />
+            <input
+              type="text"
+              value={followUpText}
+              onChange={handleInputChange}
+              onFocus={() => onChatActiveChange?.(true)}
+              onBlur={() => !followUpText.trim() && onChatActiveChange?.(false)}
+              placeholder="Ask Nova anything or clarify..."
+              className="w-full pl-8 pr-3 py-2 bg-slate-900/90 border border-slate-700/80 rounded-xl text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-sky-400 transition-colors"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={!followUpText.trim()}
+            className="px-3 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-emerald-500 hover:from-sky-400 hover:to-emerald-400 disabled:opacity-40 text-slate-950 font-bold text-xs flex items-center space-x-1 shadow-md transition-all active:scale-95"
+          >
+            <span>Ask</span>
+            <Send className="w-3 h-3" />
+          </button>
+        </form>
+
+        {/* Pinned Open Status Bar */}
+        <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] text-slate-400 font-mono">
+          <span className="flex items-center space-x-1.5 text-sky-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-sky-400 inline-block animate-pulse"></span>
+            <span>Explanation Pinned Open</span>
+          </span>
+          <span>Click X to close</span>
+        </div>
+      </div>
+
+      {/* Connected Comic Thought Bubble Dots pointing LEFT to Dog Companion */}
+      <div className="absolute -left-6 bottom-14 flex items-center space-x-1.5 pointer-events-none">
+        <div className="w-2.5 h-2.5 rounded-full bg-slate-900/90 border border-amber-400/50 backdrop-blur-md" />
+        <div className="w-4 h-4 rounded-full bg-slate-900/95 border-2 border-amber-400/70 backdrop-blur-md animate-pulse shadow-md" />
+      </div>
+    </div>
+  )
+}

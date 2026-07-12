@@ -1,0 +1,83 @@
+import asyncio
+import os
+import json
+from typing import AsyncGenerator
+import litellm
+from prompts import build_explain_prompt
+
+# Suppress LiteLLM verbose logging by default
+litellm.suppress_debug_info = True
+
+async def stream_explanation(
+    text: str,
+    model: str | None = None,
+    api_key: str | None = None,
+    context: str | None = None
+) -> AsyncGenerator[str, None]:
+    """
+    Streams markdown explanation chunks using Server-Sent Events (SSE) format.
+    Yields data formatted as SSE lines: 'data: {"chunk": "..."}\n\n'
+    Finished event: 'data: [DONE]\n\n'
+    """
+    selected_model = model or os.getenv("DEFAULT_MODEL", "gemini/gemini-2.5-flash")
+
+    # If mock model or explicitly requested mock
+    if selected_model.lower() == "mock":
+        async for chunk in _stream_mock_explanation(text):
+            yield chunk
+        return
+
+    # Check if we have an API key configured for the requested provider
+    # Set dynamic api_key if provided
+    kwargs = {
+        "model": selected_model,
+        "messages": build_explain_prompt(text, context),
+        "stream": True,
+    }
+    if api_key:
+        kwargs["api_key"] = api_key
+
+    try:
+        response = await litellm.acompletion(**kwargs)
+        async for part in response:
+            delta = part.choices[0].delta.content if part.choices and part.choices[0].delta else None
+            if delta:
+                payload = json.dumps({"chunk": delta})
+                yield f"data: {payload}\n\n"
+        yield "data: [DONE]\n\n"
+    except Exception as e:
+        # If API call fails (e.g., missing API key or offline), gracefully fallback or report error cleanly
+        err_msg = f"\n\n**Note:** *Could not reach LLM provider (`{selected_model}`): {str(e)}*\n\nSwitching to local simulation explanation:\n\n"
+        yield f"data: {json.dumps({'chunk': err_msg})}\n\n"
+        async for chunk in _stream_mock_explanation(text):
+            yield chunk
+
+
+async def _stream_mock_explanation(text: str) -> AsyncGenerator[str, None]:
+    """
+    High-quality simulated streaming explanation for offline testing & dev mode.
+    """
+    preview = text.strip()
+    if len(preview) > 60:
+        preview = preview[:57] + "..."
+
+    explanation_paragraphs = [
+        f"**Here is a quick explanation of what you selected:**\n\n",
+        f"> *\"{preview}\"*\n\n",
+        "### Key Concept Breakdown\n\n",
+        "- **Core Meaning**: This text refers to a key concept or pattern within your current document or codebase.\n",
+        "- **Why it matters**: Understanding this helps clarify the surrounding context and logic flow.\n",
+        "- **In practice**: When encountering this pattern, look at its inputs, dependencies, and expected output behavior.\n\n",
+        "💡 *Tip: You can change the AI provider (`gemini/gemini-2.5-flash`, `claude-3-5-sonnet-latest`, etc.) anytime in the Pet Settings panel!*"
+    ]
+
+    for paragraph in explanation_paragraphs:
+        # Stream word by word for a natural thought-bubble typing effect
+        words = paragraph.split(" ")
+        for i, word in enumerate(words):
+            token = word + (" " if i < len(words) - 1 else "")
+            payload = json.dumps({"chunk": token})
+            yield f"data: {payload}\n\n"
+            await asyncio.sleep(0.04)
+
+    yield "data: [DONE]\n\n"
