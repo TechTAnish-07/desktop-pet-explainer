@@ -104,6 +104,23 @@ export function App() {
     }
   }
 
+  const handleStartChat = () => {
+    setShowWelcome(false)
+    setSelectedText('')
+    setPetState('talking')
+    setExplanationOpen(true)
+    startStream({
+      text: "Woof! 🐾 Hey buddy! I'm right here with you! What's on your mind today? Let's chat!",
+      model,
+      apiKey,
+      onStart: () => setPetState('talking'),
+      onChunk: () => setPetState('talking'),
+      onFinish: () => setPetState('idle'),
+      onError: () => setPetState('idle'),
+    })
+    setChatActive(true)
+  }
+
   const handlePetClick = () => {
     setShowWelcome(false)
     if (petState === 'hidden' || petState === 'idle' || petState === 'sleeping') {
@@ -196,6 +213,7 @@ export function App() {
               state={petState}
               onClick={handlePetClick}
               onHoverEnter={resetTimer}
+              onStartChat={handleStartChat}
               onTestExplain={handleSimulateTrigger}
               onOpenSettings={() => setIsSettingsOpen(!isSettingsOpen)}
               onHide={handleCloseAndClear}

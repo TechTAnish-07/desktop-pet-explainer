@@ -7,6 +7,7 @@ interface PetCharacterProps {
   onHoverEnter?: () => void
   onHoverLeave?: () => void
   onClick?: () => void
+  onStartChat?: () => void
   onTestExplain?: () => void
   onOpenSettings?: () => void
   onHide?: () => void
@@ -17,6 +18,7 @@ export const PetCharacter: React.FC<PetCharacterProps> = ({
   onHoverEnter,
   onHoverLeave,
   onClick,
+  onStartChat,
   onTestExplain,
   onOpenSettings,
   onHide,
@@ -118,9 +120,21 @@ export const PetCharacter: React.FC<PetCharacterProps> = ({
         <button
           onClick={(e) => {
             e.stopPropagation()
+            onStartChat?.()
+          }}
+          className="flex items-center space-x-1 px-3 py-1 rounded-full bg-sky-500/90 hover:bg-sky-400 text-slate-950 text-xs font-extrabold shadow-lg transition-transform active:scale-95 cursor-pointer"
+          title="Start Friendly Talk with Nova Pup"
+        >
+          <MessageCircleHeart className="w-3.5 h-3.5" />
+          <span>Chat</span>
+        </button>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
             onTestExplain?.()
           }}
-          className="flex items-center space-x-1 px-3 py-1 rounded-full bg-amber-500/90 hover:bg-amber-400 text-slate-950 text-xs font-extrabold shadow-lg transition-transform active:scale-95"
+          className="flex items-center space-x-1 px-3 py-1 rounded-full bg-amber-500/90 hover:bg-amber-400 text-slate-950 text-xs font-extrabold shadow-lg transition-transform active:scale-95 cursor-pointer"
           title="Test / Explain Sample"
         >
           <Sparkles className="w-3.5 h-3.5" />
