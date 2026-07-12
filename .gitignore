@@ -1,0 +1,25 @@
+# Node / Frontend
+node_modules/
+dist/
+dist-electron/
+release/
+out/
+*.log
+
+# Python / Backend
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+*.env
+.env*
+!.env.example
+
+# OS / Editor
+.DS_Store
+.idea/
+.vscode/
