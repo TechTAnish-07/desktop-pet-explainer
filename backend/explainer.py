@@ -3,7 +3,7 @@ import os
 import json
 from typing import AsyncGenerator
 import litellm
-from prompts import build_explain_prompt
+from prompts import build_explain_prompt, build_chat_prompt
 
 # Suppress LiteLLM verbose logging by default
 litellm.suppress_debug_info = True
@@ -15,11 +15,11 @@ async def stream_explanation(
     context: str | None = None
 ) -> AsyncGenerator[str, None]:
     """
-    Streams markdown explanation chunks using Server-Sent Events (SSE) format.
+    Streams markdown explanation chunks using Server-Sent Events (SSE) format with Powerful Model.
     Yields data formatted as SSE lines: 'data: {"chunk": "..."}\n\n'
     Finished event: 'data: [DONE]\n\n'
     """
-    selected_model = model or os.getenv("DEFAULT_MODEL", "gemini/gemini-2.5-flash")
+    selected_model = model or os.getenv("DEFAULT_EXPLAIN_MODEL", "gemini/gemini-2.5-pro")
 
     # If mock model or explicitly requested mock
     if selected_model.lower() == "mock":
@@ -27,8 +27,6 @@ async def stream_explanation(
             yield chunk
         return
 
-    # Check if we have an API key configured for the requested provider
-    # Set dynamic api_key if provided
     kwargs = {
         "model": selected_model,
         "messages": build_explain_prompt(text, context),
@@ -46,11 +44,52 @@ async def stream_explanation(
                 yield f"data: {payload}\n\n"
         yield "data: [DONE]\n\n"
     except Exception as e:
-        # If API call fails (e.g., missing API key or offline), gracefully fallback or report error cleanly
         err_msg = f"\n\n**Note:** *Could not reach LLM provider (`{selected_model}`): {str(e)}*\n\nSwitching to local simulation explanation:\n\n"
         yield f"data: {json.dumps({'chunk': err_msg})}\n\n"
         async for chunk in _stream_mock_explanation(text):
             yield chunk
+
+async def stream_chat(
+    message: str,
+    model: str | None = None,
+    api_key: str | None = None
+) -> AsyncGenerator[str, None]:
+    """
+    Streams friendly chit-chat using Lightweight Conversation Model (e.g., gemini-2.5-flash-lite).
+    """
+    selected_model = model or os.getenv("DEFAULT_CHAT_MODEL", "gemini/gemini-2.5-flash-lite")
+
+    if selected_model.lower() == "mock":
+        async for chunk in _stream_mock_chat(message):
+            yield chunk
+        return
+
+    kwargs = {
+        "model": selected_model,
+        "messages": build_chat_prompt(message),
+        "stream": True,
+    }
+    if api_key:
+        kwargs["api_key"] = api_key
+
+    try:
+        response = await litellm.acompletion(**kwargs)
+        async for part in response:
+            delta = part.choices[0].delta.content if part.choices and part.choices[0].delta else None
+            if delta:
+                payload = json.dumps({"chunk": delta})
+                yield f"data: {payload}\n\n"
+        yield "data: [DONE]\n\n"
+    except Exception as e:
+        async for chunk in _stream_mock_chat(message):
+            yield chunk
+
+async def _stream_mock_chat(message: str) -> AsyncGenerator[str, None]:
+    reply = f"Woof! 🐾 Hey buddy! I heard: \"{message}\". I'm right here with you!"
+    for word in reply.split(' '):
+        yield f"data: {json.dumps({'chunk': word + ' '})}\n\n"
+        await asyncio.sleep(0.04)
+    yield "data: [DONE]\n\n"
 
 
 async def _stream_mock_explanation(text: str) -> AsyncGenerator[str, None]:

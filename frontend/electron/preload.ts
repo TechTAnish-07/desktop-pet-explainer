@@ -4,6 +4,8 @@ export interface SettingsData {
   autoHideSeconds: number
   hotkey: string
   model: string
+  explainModel?: string
+  chatModel?: string
   apiKey: string
 }
 

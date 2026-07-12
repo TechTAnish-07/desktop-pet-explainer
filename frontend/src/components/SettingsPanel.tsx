@@ -12,7 +12,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   onClose,
   onSettingsSaved,
 }) => {
-  const [model, setModel] = useState('gemini/gemini-2.5-flash')
+  const [explainModel, setExplainModel] = useState('gemini/gemini-2.5-pro')
+  const [chatModel, setChatModel] = useState('gemini/gemini-2.5-flash-lite')
   const [apiKey, setApiKey] = useState('')
   const [autoHideSeconds, setAutoHideSeconds] = useState(300)
   const [hotkey, setHotkey] = useState('CommandOrControl+Shift+E')
@@ -22,7 +23,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     if (isOpen && window.electronAPI) {
       window.electronAPI.getSettings().then((settings) => {
         if (settings) {
-          setModel(settings.model || 'gemini/gemini-2.5-flash')
+          setExplainModel(settings.explainModel || settings.model || 'gemini/gemini-2.5-pro')
+          setChatModel(settings.chatModel || 'gemini/gemini-2.5-flash-lite')
           setApiKey(settings.apiKey || '')
           setAutoHideSeconds(settings.autoHideSeconds || 300)
           setHotkey(settings.hotkey || 'CommandOrControl+Shift+E')
@@ -42,7 +44,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const handleSave = async () => {
     if (window.electronAPI) {
       await window.electronAPI.saveSettings({
-        model,
+        explainModel,
+        chatModel,
+        model: explainModel,
         apiKey,
         autoHideSeconds,
         hotkey,
@@ -78,21 +82,38 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
       </div>
 
       <div className="space-y-4 text-xs">
-        {/* LLM Model Provider */}
+        {/* Powerful Explanation Model */}
+        <div>
+          <label className="flex items-center space-x-1.5 text-slate-300 font-medium mb-1.5">
+            <Cpu className="w-3.5 h-3.5 text-amber-400" />
+            <span>Explanation Model (Powerful)</span>
+          </label>
+          <select
+            value={explainModel}
+            onChange={(e) => setExplainModel(e.target.value)}
+            className="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-amber-400"
+          >
+            <option value="gemini/gemini-2.5-pro">Google Gemini 2.5 Pro (Powerful)</option>
+            <option value="gemini/gemini-2.5-flash">Google Gemini 2.5 Flash</option>
+            <option value="claude-3-5-sonnet-latest">Anthropic Claude 3.5 Sonnet</option>
+            <option value="gpt-4o">OpenAI GPT-4o</option>
+            <option value="mock">Built-in Simulation Mode (No API Key)</option>
+          </select>
+        </div>
+
+        {/* Lightweight Friendly Chat Model */}
         <div>
           <label className="flex items-center space-x-1.5 text-slate-300 font-medium mb-1.5">
             <Cpu className="w-3.5 h-3.5 text-sky-400" />
-            <span>AI Model Provider</span>
+            <span>Friendly Chat Model (Fast/Light)</span>
           </label>
           <select
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
+            value={chatModel}
+            onChange={(e) => setChatModel(e.target.value)}
             className="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-sky-400"
           >
-            <option value="gemini/gemini-2.5-flash">Google Gemini 2.5 Flash (Free Tier)</option>
-            <option value="gemini/gemini-1.5-pro">Google Gemini 1.5 Pro</option>
-            <option value="claude-3-5-sonnet-latest">Anthropic Claude 3.5 Sonnet</option>
-            <option value="gpt-4o">OpenAI GPT-4o</option>
+            <option value="gemini/gemini-2.5-flash-lite">Google Gemini 2.5 Flash-Lite (Light/Fast)</option>
+            <option value="gpt-4o-mini">OpenAI GPT-4o-Mini</option>
             <option value="mock">Built-in Simulation Mode (No API Key)</option>
           </select>
         </div>

@@ -3,15 +3,15 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from models import ExplainRequest
-from explainer import stream_explanation
+from models import ExplainRequest, ChatRequest
+from explainer import stream_explanation, stream_chat
 
 # Load environment variables from .env
 load_dotenv()
 
 app = FastAPI(
     title="Desktop Pet Explainer API",
-    description="Local sidecar backend for streaming explanations via LiteLLM",
+    description="Local sidecar backend for dual-model explanations & friendly conversation via LiteLLM",
     version="1.0.0"
 )
 
@@ -28,19 +28,26 @@ app.add_middleware(
 async def health_check():
     return {
         "status": "ok",
-        "default_model": os.getenv("DEFAULT_MODEL", "gemini/gemini-2.5-flash")
+        "default_explain_model": os.getenv("DEFAULT_EXPLAIN_MODEL", "gemini/gemini-2.5-pro"),
+        "default_chat_model": os.getenv("DEFAULT_CHAT_MODEL", "gemini/gemini-2.5-flash-lite")
     }
 
 @app.get("/providers")
 async def get_providers():
     """Returns supported model prefixes and default configuration."""
     return {
-        "default_model": os.getenv("DEFAULT_MODEL", "gemini/gemini-2.5-flash"),
-        "models": [
-            {"id": "gemini/gemini-2.5-flash", "name": "Google Gemini 2.5 Flash (Free Tier)", "provider": "Google"},
-            {"id": "gemini/gemini-1.5-pro", "name": "Google Gemini 1.5 Pro", "provider": "Google"},
+        "default_explain_model": os.getenv("DEFAULT_EXPLAIN_MODEL", "gemini/gemini-2.5-pro"),
+        "default_chat_model": os.getenv("DEFAULT_CHAT_MODEL", "gemini/gemini-2.5-flash-lite"),
+        "explain_models": [
+            {"id": "gemini/gemini-2.5-pro", "name": "Google Gemini 2.5 Pro (Powerful Explanation)", "provider": "Google"},
+            {"id": "gemini/gemini-2.5-flash", "name": "Google Gemini 2.5 Flash", "provider": "Google"},
             {"id": "claude-3-5-sonnet-latest", "name": "Anthropic Claude 3.5 Sonnet", "provider": "Anthropic"},
             {"id": "gpt-4o", "name": "OpenAI GPT-4o", "provider": "OpenAI"},
+            {"id": "mock", "name": "Simulation Dev Mode (No API Key)", "provider": "Local"}
+        ],
+        "chat_models": [
+            {"id": "gemini/gemini-2.5-flash-lite", "name": "Google Gemini 2.5 Flash-Lite (Fast Friendly Chat)", "provider": "Google"},
+            {"id": "gpt-4o-mini", "name": "OpenAI GPT-4o-Mini", "provider": "OpenAI"},
             {"id": "mock", "name": "Simulation Dev Mode (No API Key)", "provider": "Local"}
         ]
     }
@@ -48,7 +55,7 @@ async def get_providers():
 @app.post("/explain")
 async def explain_text(request: ExplainRequest):
     """
-    POST endpoint that streams explanations using Server-Sent Events (SSE).
+    POST endpoint that streams powerful explanations using Server-Sent Events (SSE).
     """
     return StreamingResponse(
         stream_explanation(
@@ -56,6 +63,20 @@ async def explain_text(request: ExplainRequest):
             model=request.model,
             api_key=request.api_key,
             context=request.context
+        ),
+        media_type="text/event-stream"
+    )
+
+@app.post("/chat")
+async def chat_friendly(request: ChatRequest):
+    """
+    POST endpoint that streams fast friendly conversation using lightweight model.
+    """
+    return StreamingResponse(
+        stream_chat(
+            message=request.message,
+            model=request.model,
+            api_key=request.api_key
         ),
         media_type="text/event-stream"
     )

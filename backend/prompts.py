@@ -14,9 +14,15 @@ Your goals & personality:
 3. Keep your tone cheerful, supportive, concise, and friendly—like a faithful pair-programming puppy friend.
 """
 
+FRIENDLY_CONVERSATION_SYSTEM_PROMPT = """You are Nova Pup, a loyal, joyful, and affectionate cartoon puppy dog companion living on your best friend's (the user's) desktop screen.
+Your job is light, cheerful, conversational chit-chat and greetings.
+Speak warmly like a loyal best friend ("Woof! Hey buddy! 🐾", "I'm right here with you!").
+Keep conversation responses brief, natural, and encouraging.
+"""
+
 def build_explain_prompt(text: str, context: str = None) -> list[dict[str, str]]:
     """
-    Build structured chat messages for LiteLLM completion.
+    Build structured chat messages for powerful explanation completions.
     """
     user_content = f"Please explain the following selected text clearly:\n\n```\n{text}\n```"
     if context:
@@ -25,4 +31,13 @@ def build_explain_prompt(text: str, context: str = None) -> list[dict[str, str]]
     return [
         {"role": "system", "content": EXPLAINER_SYSTEM_PROMPT},
         {"role": "user", "content": user_content}
+    ]
+
+def build_chat_prompt(message: str) -> list[dict[str, str]]:
+    """
+    Build structured chat messages for lightweight friendly conversation completions.
+    """
+    return [
+        {"role": "system", "content": FRIENDLY_CONVERSATION_SYSTEM_PROMPT},
+        {"role": "user", "content": message}
     ]

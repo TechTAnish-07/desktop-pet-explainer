@@ -7,14 +7,18 @@ interface SettingsSchema {
   autoHideSeconds: number
   hotkey: string
   model: string
+  explainModel?: string
+  chatModel?: string
   apiKey: string
 }
 
 const store = new Store<SettingsSchema>({
   defaults: {
-    autoHideSeconds: 20,
+    autoHideSeconds: 300,
     hotkey: 'CommandOrControl+Shift+E',
-    model: 'gemini/gemini-2.5-flash',
+    model: 'gemini/gemini-2.5-pro',
+    explainModel: 'gemini/gemini-2.5-pro',
+    chatModel: 'gemini/gemini-2.5-flash-lite',
     apiKey: '',
   },
 })
