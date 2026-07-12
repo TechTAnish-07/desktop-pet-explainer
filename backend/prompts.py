@@ -33,11 +33,19 @@ def build_explain_prompt(text: str, context: str = None) -> list[dict[str, str]]
         {"role": "user", "content": user_content}
     ]
 
-def build_chat_prompt(message: str) -> list[dict[str, str]]:
+def build_chat_prompt(message: str, memories: list[str] = None) -> list[dict[str, str]]:
     """
-    Build structured chat messages for lightweight friendly conversation completions.
+    Build structured chat messages for lightweight friendly conversation completions,
+    injecting saved local user memories.
     """
+    system_content = FRIENDLY_CONVERSATION_SYSTEM_PROMPT
+    if memories and len(memories) > 0:
+        system_content += "\nHere are personal things you remember about your best friend (stored locally and securely):\n"
+        for mem in memories:
+            system_content += f"- {mem}\n"
+        system_content += "\nUse these memories naturally when chatting with your friend!"
+
     return [
-        {"role": "system", "content": FRIENDLY_CONVERSATION_SYSTEM_PROMPT},
+        {"role": "system", "content": system_content},
         {"role": "user", "content": message}
     ]

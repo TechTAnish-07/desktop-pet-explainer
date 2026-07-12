@@ -8,7 +8,7 @@ interface ThoughtCloudProps {
   autoHideSeconds: number
   isChatActive?: boolean
   onChatActiveChange?: (active: boolean) => void
-  onSendFollowUp?: (question: string) => void
+  onSendFollowUp?: (question: string, mode?: 'explain' | 'chat') => void
   onClose: () => void
 }
 
@@ -24,6 +24,7 @@ export const ThoughtCloud: React.FC<ThoughtCloudProps> = ({
 }) => {
   const [copied, setCopied] = useState(false)
   const [followUpText, setFollowUpText] = useState('')
+  const [mode, setMode] = useState<'chat' | 'explain'>('chat')
 
   const handleMouseEnter = () => {
     window.electronAPI?.setIgnoreMouseEvents(false)
@@ -51,7 +52,7 @@ export const ThoughtCloud: React.FC<ThoughtCloudProps> = ({
     const q = followUpText.trim()
     setFollowUpText('')
     onChatActiveChange?.(false)
-    onSendFollowUp?.(q)
+    onSendFollowUp?.(q, mode)
   }
 
   // Convert basic markdown tags safely to styled JSX elements or formatted text
@@ -155,29 +156,46 @@ export const ThoughtCloud: React.FC<ThoughtCloudProps> = ({
           )}
         </div>
 
-        {/* Interactive Follow-up Chat / Input Bar */}
-        <form onSubmit={handleSend} className="mt-3 pt-2.5 border-t border-slate-700/80 flex items-center space-x-2">
-          <div className="relative flex-1 flex items-center">
-            <MessageSquare className="w-3.5 h-3.5 text-sky-400 absolute left-2.5" />
-            <input
-              type="text"
-              value={followUpText}
-              onChange={handleInputChange}
-              onFocus={() => onChatActiveChange?.(true)}
-              onBlur={() => !followUpText.trim() && onChatActiveChange?.(false)}
-              placeholder="Ask Nova anything or clarify..."
-              className="w-full pl-8 pr-3 py-2 bg-slate-900/90 border border-slate-700/80 rounded-xl text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-sky-400 transition-colors"
-            />
+        {/* Mode Toggle & Follow-up Chat Form */}
+        <div className="mt-3 pt-2.5 border-t border-slate-700/80">
+          <div className="flex items-center justify-between mb-1.5 px-0.5">
+            <span className="text-[10px] text-slate-400">Response Mode:</span>
+            <button
+              type="button"
+              onClick={() => setMode(mode === 'chat' ? 'explain' : 'chat')}
+              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border transition-all cursor-pointer ${
+                mode === 'chat'
+                  ? 'bg-sky-500/20 border-sky-400 text-sky-300'
+                  : 'bg-amber-500/20 border-amber-400 text-amber-300'
+              }`}
+            >
+              {mode === 'chat' ? '💬 Friendly Bestie Chat' : '🧠 Deep Explain Mode'}
+            </button>
           </div>
-          <button
-            type="submit"
-            disabled={!followUpText.trim()}
-            className="px-3 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-emerald-500 hover:from-sky-400 hover:to-emerald-400 disabled:opacity-40 text-slate-950 font-bold text-xs flex items-center space-x-1 shadow-md transition-all active:scale-95"
-          >
-            <span>Ask</span>
-            <Send className="w-3 h-3" />
-          </button>
-        </form>
+
+          <form onSubmit={handleSend} className="flex items-center space-x-2">
+            <div className="relative flex-1 flex items-center">
+              <MessageSquare className="w-3.5 h-3.5 text-sky-400 absolute left-2.5" />
+              <input
+                type="text"
+                value={followUpText}
+                onChange={handleInputChange}
+                onFocus={() => onChatActiveChange?.(true)}
+                onBlur={() => !followUpText.trim() && onChatActiveChange?.(false)}
+                placeholder={mode === 'chat' ? 'Chat casually with Nova...' : 'Ask for technical breakdown...'}
+                className="w-full pl-8 pr-3 py-2 bg-slate-900/90 border border-slate-700/80 rounded-xl text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-sky-400 transition-colors"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={!followUpText.trim()}
+              className="px-3 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-emerald-500 hover:from-sky-400 hover:to-emerald-400 disabled:opacity-40 text-slate-950 font-bold text-xs flex items-center space-x-1 shadow-md transition-all active:scale-95 cursor-pointer"
+            >
+              <span>Ask</span>
+              <Send className="w-3 h-3" />
+            </button>
+          </form>
+        </div>
 
         {/* Pinned Open Status Bar */}
         <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] text-slate-400 font-mono">

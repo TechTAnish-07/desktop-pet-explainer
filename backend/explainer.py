@@ -4,6 +4,7 @@ import json
 from typing import AsyncGenerator
 import litellm
 from prompts import build_explain_prompt, build_chat_prompt
+from memory import get_user_memories, extract_and_store_memory_heuristic
 
 # Suppress LiteLLM verbose logging by default
 litellm.suppress_debug_info = True
@@ -55,9 +56,14 @@ async def stream_chat(
     api_key: str | None = None
 ) -> AsyncGenerator[str, None]:
     """
-    Streams friendly chit-chat using Lightweight Conversation Model (e.g., gemini-2.5-flash-lite).
+    Streams friendly chit-chat using Lightweight Conversation Model (e.g., gemini-2.5-flash-lite)
+    and safe local user memory.
     """
     selected_model = model or os.getenv("DEFAULT_CHAT_MODEL", "gemini/gemini-2.5-flash-lite")
+
+    # Automatically extract any personal fact from user message to local memory
+    extract_and_store_memory_heuristic(message)
+    memories = get_user_memories()
 
     if selected_model.lower() == "mock":
         async for chunk in _stream_mock_chat(message):
@@ -66,7 +72,7 @@ async def stream_chat(
 
     kwargs = {
         "model": selected_model,
-        "messages": build_chat_prompt(message),
+        "messages": build_chat_prompt(message, memories),
         "stream": True,
     }
     if api_key:

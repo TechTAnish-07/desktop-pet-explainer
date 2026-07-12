@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from models import ExplainRequest, ChatRequest
 from explainer import stream_explanation, stream_chat
+from memory import get_user_memories, clear_user_memories
 
 # Load environment variables from .env
 load_dotenv()
@@ -80,6 +81,16 @@ async def chat_friendly(request: ChatRequest):
         ),
         media_type="text/event-stream"
     )
+
+@app.get("/memories")
+async def get_memories():
+    """Retrieve stored personal facts about the user."""
+    return {"memories": get_user_memories()}
+
+@app.delete("/memories")
+async def delete_memories():
+    """Clear all stored personal facts about the user."""
+    return {"cleared": clear_user_memories()}
 
 if __name__ == "__main__":
     import uvicorn
