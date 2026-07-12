@@ -14,7 +14,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 }) => {
   const [model, setModel] = useState('gemini/gemini-2.5-flash')
   const [apiKey, setApiKey] = useState('')
-  const [autoHideSeconds, setAutoHideSeconds] = useState(20)
+  const [autoHideSeconds, setAutoHideSeconds] = useState(300)
   const [hotkey, setHotkey] = useState('CommandOrControl+Shift+E')
   const [savedMessage, setSavedMessage] = useState(false)
 
@@ -24,7 +24,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
         if (settings) {
           setModel(settings.model || 'gemini/gemini-2.5-flash')
           setApiKey(settings.apiKey || '')
-          setAutoHideSeconds(settings.autoHideSeconds || 20)
+          setAutoHideSeconds(settings.autoHideSeconds || 300)
           setHotkey(settings.hotkey || 'CommandOrControl+Shift+E')
         }
       })

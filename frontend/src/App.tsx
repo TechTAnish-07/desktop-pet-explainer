@@ -10,7 +10,7 @@ import { Settings, Sparkles, EyeOff } from 'lucide-react'
 export function App() {
   const [selectedText, setSelectedText] = useState<string>('')
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false)
-  const [autoHideSeconds, setAutoHideSeconds] = useState<number>(20)
+  const [autoHideSeconds, setAutoHideSeconds] = useState<number>(300)
   const [model, setModel] = useState<string>('gemini/gemini-2.5-flash')
   const [apiKey, setApiKey] = useState<string>('')
 
@@ -167,14 +167,26 @@ export function App() {
 
         {/* CENTER COLUMN: Nova the Cartoon Puppy Dog Companion (Anchor) */}
         <div className="flex flex-col items-center justify-end z-30 pb-2">
-          <PetCharacter
-            state={petState}
-            onClick={handlePetClick}
-            onHoverEnter={resetTimer}
-            onTestExplain={handleSimulateTrigger}
-            onOpenSettings={() => setIsSettingsOpen(!isSettingsOpen)}
-            onHide={handleCloseAndClear}
-          />
+          {petState !== 'hidden' ? (
+            <PetCharacter
+              state={petState}
+              onClick={handlePetClick}
+              onHoverEnter={resetTimer}
+              onTestExplain={handleSimulateTrigger}
+              onOpenSettings={() => setIsSettingsOpen(!isSettingsOpen)}
+              onHide={handleCloseAndClear}
+            />
+          ) : (
+            <button
+              onClick={() => showPet('idle')}
+              onMouseEnter={() => window.electronAPI?.setIgnoreMouseEvents(false)}
+              onMouseLeave={() => window.electronAPI?.setIgnoreMouseEvents(true)}
+              className="px-4 py-2 rounded-full bg-slate-900/95 hover:bg-slate-800 border-2 border-amber-400 text-amber-300 font-extrabold text-xs shadow-2xl flex items-center space-x-2 animate-bounce transition-all cursor-pointer"
+            >
+              <span>🐶 Summon Nova Pup</span>
+              <span className="text-[10px] text-slate-400 font-normal">Cmd+Shift+E</span>
+            </button>
+          )}
         </div>
 
         {/* RIGHT COLUMN: Comic Thought Cloud Explanation & Confirm Bubble */}

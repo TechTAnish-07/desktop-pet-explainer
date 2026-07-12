@@ -33,7 +33,7 @@ export function usePetVisibility({ autoHideSeconds }: UsePetVisibilityProps) {
       setRemainingSeconds((prev) => {
         if (prev <= 1) {
           clearTimer()
-          setPetState('sleeping')
+          setPetState('hidden')
           return 0
         }
         return prev - 1
@@ -49,7 +49,7 @@ export function usePetVisibility({ autoHideSeconds }: UsePetVisibilityProps) {
   const hidePet = useCallback(() => {
     isExplanationOpenRef.current = false
     clearTimer()
-    setPetState('sleeping')
+    setPetState('hidden')
   }, [clearTimer])
 
   const setStreamingStatus = useCallback((streaming: boolean) => {
