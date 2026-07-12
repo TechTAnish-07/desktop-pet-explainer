@@ -38,8 +38,10 @@ function createWindow() {
     },
   })
 
-  // Set initial click-through state
+  // Set initial click-through state and ensure window floats above web browsers, full-screen websites, and all macOS spaces
   mainWindow.setIgnoreMouseEvents(true, { forward: true })
+  mainWindow.setAlwaysOnTop(true, 'screen-saver', 1)
+  mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
 
   if (process.env.VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL)
