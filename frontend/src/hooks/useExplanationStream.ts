@@ -55,13 +55,13 @@ export function useExplanationStream() {
 async function streamHardcodedExplanation(text: string, onChunk: (chunk: string) => void) {
   const preview = text.length > 50 ? text.slice(0, 47) + '...' : text
   const chunks = [
-    `### Overview\n\n`,
+    `Woof! 🐾 Hey buddy, let's look at this together!\n\n`,
     `You selected: "${preview}"\n\n`,
-    `Here is a quick breakdown of this concept:\n\n`,
-    `- **Core Meaning**: This text highlights a foundational pattern or definition.\n`,
-    `- **Why it matters**: Understanding it clarifies the surrounding context and logic flow.\n`,
-    `- **In Practice**: Look closely at input parameters and expected behaviors when applying this idea.\n\n`,
-    `💡 *Tip: Nova AI is ready to explain any copied text anytime!*`,
+    `Here's my friendly breakdown for you, my friend:\n\n`,
+    `- **Core Meaning**: This text highlights a foundational pattern or key definition.\n`,
+    `- **Why it matters**: Understanding it clarifies the surrounding context so you can master it easily!\n`,
+    `- **In Practice**: Look closely at how this idea interacts with the rest of your project.\n\n`,
+    `🐶 *I'm always right here on your screen whenever you need me, buddy!*`,
   ]
 
   for (const segment of chunks) {

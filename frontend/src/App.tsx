@@ -13,6 +13,7 @@ export function App() {
   const [autoHideSeconds, setAutoHideSeconds] = useState<number>(300)
   const [model, setModel] = useState<string>('gemini/gemini-2.5-flash')
   const [apiKey, setApiKey] = useState<string>('')
+  const [showWelcome, setShowWelcome] = useState<boolean>(true)
 
   const {
     petState,
@@ -89,10 +90,12 @@ export function App() {
     setSelectedText('')
     clearExplanation()
     setExplanationOpen(false)
+    setShowWelcome(false)
     hidePet()
   }
 
   const handleSimulateTrigger = async () => {
+    setShowWelcome(false)
     if (window.electronAPI) {
       await window.electronAPI.simulateHotkey()
     } else {
@@ -102,6 +105,7 @@ export function App() {
   }
 
   const handlePetClick = () => {
+    setShowWelcome(false)
     if (petState === 'hidden' || petState === 'idle' || petState === 'sleeping') {
       window.electronAPI?.readClipboardText().then((txt) => {
         setSelectedText(txt || 'Select text anywhere on your PC and press Cmd+Shift+E to explain!')
@@ -167,6 +171,26 @@ export function App() {
 
         {/* CENTER COLUMN: Nova the Cartoon Puppy Dog Companion (Anchor) */}
         <div className="flex flex-col items-center justify-end z-30 pb-2">
+          {/* Welcome Back Friendly Comic Bubble on Launch */}
+          {showWelcome && petState === 'idle' && !explanation && (
+            <div
+              className="relative mb-3 px-5 py-3.5 rounded-3xl bg-slate-900/95 border-2 border-amber-400 text-amber-200 text-xs font-semibold shadow-2xl max-w-xs text-center animate-bounce"
+              onMouseEnter={() => window.electronAPI?.setIgnoreMouseEvents(false)}
+              onMouseLeave={() => window.electronAPI?.setIgnoreMouseEvents(true)}
+            >
+              <p className="leading-relaxed">
+                Woof! Welcome back, my best friend! 🐾 I&apos;m so happy to see you! Highlight anything on your screen & press <span className="font-bold text-amber-300">Cmd+Shift+E</span> to explore together!
+              </p>
+              <button
+                onClick={() => setShowWelcome(false)}
+                className="mt-2.5 px-3.5 py-1 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-[10px] shadow transition-transform active:scale-95 cursor-pointer"
+              >
+                Let&apos;s explore, buddy! 🚀
+              </button>
+              <div className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[7px] border-l-transparent border-r-[7px] border-r-transparent border-t-[9px] border-t-amber-400" />
+            </div>
+          )}
+
           {petState !== 'hidden' ? (
             <PetCharacter
               state={petState}
