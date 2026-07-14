@@ -93,10 +93,19 @@ async def stream_chat(
             yield chunk
 
 async def _stream_mock_chat(message: str) -> AsyncGenerator[str, None]:
-    reply = f"Woof! 🐾 Hey buddy! I heard: \"{message}\". I'm right here with you!"
+    msg_lower = message.lower()
+    if any(w in msg_lower for w in ["hello", "hi", "hey", "woof", "morning", "howdy"]):
+        reply = "Woof woof! 🐾 Hey there, bestie! I'm so happy to hang out with you today! What are we working on right now? Tell me everything!"
+    elif any(w in msg_lower for w in ["help", "how", "what", "why", "error", "bug", "python", "code", "js", "react"]):
+        reply = f"Let's tackle that together, buddy! 🧠 When looking at `{message[:35]}...`, the best way to solve it is by breaking it down step-by-step. Feel free to highlight any code on your screen and press `Cmd+Shift+E` for a deep explanation!"
+    elif any(w in msg_lower for w in ["thank", "thanks", "good boy", "love", "awesome", "great"]):
+        reply = "Aww, woof! 🐶 You are the absolute best friend ever! I'm always right here on your screen whenever you need a hand or a cheerful tail wag!"
+    else:
+        reply = f"That is super interesting, my friend! 🐾 I'm loving our chat. Let's keep making progress on your goals today—you've got this!"
+
     for word in reply.split(' '):
         yield f"data: {json.dumps({'chunk': word + ' '})}\n\n"
-        await asyncio.sleep(0.04)
+        await asyncio.sleep(0.03)
     yield "data: [DONE]\n\n"
 
 

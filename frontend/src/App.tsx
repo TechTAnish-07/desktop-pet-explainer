@@ -29,7 +29,7 @@ export function App() {
     setStreamingStatus,
   } = usePetVisibility({ autoHideSeconds })
 
-  const { explanation, isStreaming, startStream, clearExplanation } = useExplanationStream()
+  const { explanation, setExplanation, isStreaming, startStream, clearExplanation } = useExplanationStream()
 
   // Load initial settings
   useEffect(() => {
@@ -112,19 +112,10 @@ export function App() {
     setShowWelcome(false)
     setSelectedText('')
     setSessionHistory([])
-    setPetState('talking')
     setExplanationOpen(true)
-    startStream({
-      text: "Woof! 🐾 Hey buddy! I'm right here with you! What's on your mind today? Let's chat!",
-      model,
-      apiKey,
-      endpoint: 'chat',
-      onStart: () => setPetState('talking'),
-      onChunk: () => setPetState('talking'),
-      onFinish: () => setPetState('idle'),
-      onError: () => setPetState('idle'),
-    })
     setChatActive(true)
+    setPetState('idle')
+    setExplanation("Woof! 🐾 Hey buddy! I'm right here and ready to chat! Ask me anything or type below, what are we working on today?")
   }
 
   const handlePetClick = () => {
@@ -146,10 +137,14 @@ export function App() {
       : `Follow-up question regarding previous explanation:\nQuestion: ${question}\nOriginal context: ${selectedText}`
 
     const priorTurns = sessionHistory.length === 0
-      ? [
-          { role: 'user' as const, content: selectedText ? `Please explain:\n\`\`\`\n${selectedText}\n\`\`\`` : "Started friendly chat" },
-          { role: 'assistant' as const, content: explanation }
-        ]
+      ? (selectedText
+          ? [
+              { role: 'user' as const, content: `Please explain:\n\`\`\`\n${selectedText}\n\`\`\`` },
+              { role: 'assistant' as const, content: explanation }
+            ]
+          : [
+              { role: 'assistant' as const, content: explanation }
+            ])
       : [
           ...sessionHistory,
           { role: 'assistant' as const, content: explanation }

@@ -103,6 +103,7 @@ export function useExplanationStream() {
 
   return {
     explanation,
+    setExplanation,
     isStreaming,
     startStream,
     clearExplanation,
