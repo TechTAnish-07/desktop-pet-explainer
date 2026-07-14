@@ -15,6 +15,7 @@ export function App() {
   const [apiKey, setApiKey] = useState<string>('')
   const [showWelcome, setShowWelcome] = useState<boolean>(true)
   const [sessionHistory, setSessionHistory] = useState<Array<{ role: 'user' | 'assistant', content: string }>>([])
+  const [activeMode, setActiveMode] = useState<'chat' | 'explain'>('explain')
 
   const {
     petState,
@@ -65,6 +66,7 @@ export function App() {
   }, [isStreaming, setStreamingStatus, setPetState])
 
   const handleConfirmExplain = () => {
+    setActiveMode('explain')
     setSessionHistory([])
     setPetState('thinking')
     setExplanationOpen(true)
@@ -99,6 +101,7 @@ export function App() {
   }
 
   const handleSimulateTrigger = async () => {
+    setActiveMode('explain')
     setShowWelcome(false)
     if (window.electronAPI) {
       await window.electronAPI.simulateHotkey()
@@ -109,6 +112,7 @@ export function App() {
   }
 
   const handleStartChat = () => {
+    setActiveMode('chat')
     setShowWelcome(false)
     setSelectedText('')
     setSessionHistory([])
@@ -273,8 +277,10 @@ export function App() {
               remainingSeconds={remainingSeconds}
               autoHideSeconds={autoHideSeconds}
               isChatActive={isChatActive}
+              mode={activeMode}
               history={sessionHistory}
               onChatActiveChange={setChatActive}
+              onModeChange={setActiveMode}
               onSendFollowUp={handleSendFollowUp}
               onClose={handleCloseAndClear}
             />

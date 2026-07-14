@@ -7,8 +7,10 @@ interface ThoughtCloudProps {
   remainingSeconds: number
   autoHideSeconds: number
   isChatActive?: boolean
+  mode: 'chat' | 'explain'
   history?: Array<{ role: 'user' | 'assistant', content: string }>
   onChatActiveChange?: (active: boolean) => void
+  onModeChange?: (mode: 'chat' | 'explain') => void
   onSendFollowUp?: (question: string, mode?: 'explain' | 'chat') => void
   onClose: () => void
 }
@@ -19,14 +21,15 @@ export const ThoughtCloud: React.FC<ThoughtCloudProps> = ({
   remainingSeconds,
   autoHideSeconds,
   isChatActive,
+  mode,
   history,
   onChatActiveChange,
+  onModeChange,
   onSendFollowUp,
   onClose,
 }) => {
   const [copied, setCopied] = useState(false)
   const [followUpText, setFollowUpText] = useState('')
-  const [mode, setMode] = useState<'chat' | 'explain'>('chat')
 
   const handleMouseEnter = () => {
     window.electronAPI?.setIgnoreMouseEvents(false)
@@ -115,7 +118,9 @@ export const ThoughtCloud: React.FC<ThoughtCloudProps> = ({
             <div className="w-6 h-6 rounded-lg bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center">
               <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
             </div>
-            <span className="tracking-wide text-sky-200">NOVA EXPLANATION</span>
+            <span className={`tracking-wide font-extrabold ${mode === 'chat' ? 'text-sky-300' : 'text-amber-300'}`}>
+              {mode === 'chat' ? 'NOVA FRIENDLY CHAT' : 'NOVA DEEP EXPLANATION'}
+            </span>
             {isStreaming && (
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 animate-pulse">
                 Streaming...
@@ -191,7 +196,7 @@ export const ThoughtCloud: React.FC<ThoughtCloudProps> = ({
             <span className="text-[10px] text-slate-400">Response Mode:</span>
             <button
               type="button"
-              onClick={() => setMode(mode === 'chat' ? 'explain' : 'chat')}
+              onClick={() => onModeChange?.(mode === 'chat' ? 'explain' : 'chat')}
               className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border transition-all cursor-pointer ${
                 mode === 'chat'
                   ? 'bg-sky-500/20 border-sky-400 text-sky-300'
