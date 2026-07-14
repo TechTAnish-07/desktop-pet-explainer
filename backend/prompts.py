@@ -20,23 +20,26 @@ Speak warmly like a loyal best friend ("Woof! Hey buddy! 🐾", "I'm right here 
 Keep conversation responses brief, natural, and encouraging.
 """
 
-def build_explain_prompt(text: str, context: str = None) -> list[dict[str, str]]:
+def build_explain_prompt(text: str, context: str = None, history: list[dict[str, str]] = None) -> list[dict[str, str]]:
     """
-    Build structured chat messages for powerful explanation completions.
+    Build structured chat messages for powerful explanation completions, including multi-turn session history.
     """
-    user_content = f"Please explain the following selected text clearly:\n\n```\n{text}\n```"
-    if context:
+    user_content = text if history and len(history) > 0 else f"Please explain the following selected text clearly:\n\n```\n{text}\n```"
+    if context and not (history and len(history) > 0):
         user_content += f"\n\nAdditional context:\n{context}"
 
-    return [
-        {"role": "system", "content": EXPLAINER_SYSTEM_PROMPT},
-        {"role": "user", "content": user_content}
-    ]
+    messages = [{"role": "system", "content": EXPLAINER_SYSTEM_PROMPT}]
+    if history and len(history) > 0:
+        for msg in history:
+            if msg.get("role") in ("user", "assistant") and msg.get("content"):
+                messages.append({"role": msg["role"], "content": msg["content"]})
+    messages.append({"role": "user", "content": user_content})
+    return messages
 
-def build_chat_prompt(message: str, memories: list[str] = None) -> list[dict[str, str]]:
+def build_chat_prompt(message: str, memories: list[str] = None, history: list[dict[str, str]] = None) -> list[dict[str, str]]:
     """
     Build structured chat messages for lightweight friendly conversation completions,
-    injecting saved local user memories.
+    injecting saved local user memories and multi-turn session history.
     """
     system_content = FRIENDLY_CONVERSATION_SYSTEM_PROMPT
     if memories and len(memories) > 0:
@@ -45,7 +48,10 @@ def build_chat_prompt(message: str, memories: list[str] = None) -> list[dict[str
             system_content += f"- {mem}\n"
         system_content += "\nUse these memories naturally when chatting with your friend!"
 
-    return [
-        {"role": "system", "content": system_content},
-        {"role": "user", "content": message}
-    ]
+    messages = [{"role": "system", "content": system_content}]
+    if history and len(history) > 0:
+        for msg in history:
+            if msg.get("role") in ("user", "assistant") and msg.get("content"):
+                messages.append({"role": msg["role"], "content": msg["content"]})
+    messages.append({"role": "user", "content": message})
+    return messages

@@ -14,6 +14,7 @@ export function App() {
   const [model, setModel] = useState<string>('gemini/gemini-2.5-flash')
   const [apiKey, setApiKey] = useState<string>('')
   const [showWelcome, setShowWelcome] = useState<boolean>(true)
+  const [sessionHistory, setSessionHistory] = useState<Array<{ role: 'user' | 'assistant', content: string }>>([])
 
   const {
     petState,
@@ -64,6 +65,7 @@ export function App() {
   }, [isStreaming, setStreamingStatus, setPetState])
 
   const handleConfirmExplain = () => {
+    setSessionHistory([])
     setPetState('thinking')
     setExplanationOpen(true)
     startStream({
@@ -79,7 +81,7 @@ export function App() {
       },
       onFinish: () => {
         setPetState('idle')
-        // Do not reset timer — keep explanation pinned open until user closes!
+        // Keep explanation pinned open until user closes or asks follow-up
       },
       onError: () => {
         setPetState('idle')
@@ -90,6 +92,7 @@ export function App() {
   const handleCloseAndClear = () => {
     setSelectedText('')
     clearExplanation()
+    setSessionHistory([])
     setExplanationOpen(false)
     setShowWelcome(false)
     hidePet()
@@ -108,6 +111,7 @@ export function App() {
   const handleStartChat = () => {
     setShowWelcome(false)
     setSelectedText('')
+    setSessionHistory([])
     setPetState('talking')
     setExplanationOpen(true)
     startStream({
@@ -141,11 +145,28 @@ export function App() {
       ? question
       : `Follow-up question regarding previous explanation:\nQuestion: ${question}\nOriginal context: ${selectedText}`
 
+    const priorTurns = sessionHistory.length === 0
+      ? [
+          { role: 'user' as const, content: selectedText ? `Please explain:\n\`\`\`\n${selectedText}\n\`\`\`` : "Started friendly chat" },
+          { role: 'assistant' as const, content: explanation }
+        ]
+      : [
+          ...sessionHistory,
+          { role: 'assistant' as const, content: explanation }
+        ]
+
+    const updatedHistory = [
+      ...priorTurns,
+      { role: 'user' as const, content: question }
+    ]
+    setSessionHistory(updatedHistory)
+
     startStream({
       text: payloadText,
       model,
       apiKey,
       endpoint: targetEndpoint,
+      history: updatedHistory,
       onStart: () => setPetState('thinking'),
       onChunk: () => setPetState('talking'),
       onFinish: () => {
@@ -257,6 +278,7 @@ export function App() {
               remainingSeconds={remainingSeconds}
               autoHideSeconds={autoHideSeconds}
               isChatActive={isChatActive}
+              history={sessionHistory}
               onChatActiveChange={setChatActive}
               onSendFollowUp={handleSendFollowUp}
               onClose={handleCloseAndClear}

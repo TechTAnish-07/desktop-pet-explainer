@@ -63,7 +63,8 @@ async def explain_text(request: ExplainRequest):
             text=request.text,
             model=request.model,
             api_key=request.api_key,
-            context=request.context
+            context=request.context,
+            history=request.history
         ),
         media_type="text/event-stream"
     )
@@ -77,7 +78,8 @@ async def chat_friendly(request: ChatRequest):
         stream_chat(
             message=request.message,
             model=request.model,
-            api_key=request.api_key
+            api_key=request.api_key,
+            history=request.history
         ),
         media_type="text/event-stream"
     )

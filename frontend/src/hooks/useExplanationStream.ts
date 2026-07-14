@@ -5,6 +5,7 @@ export interface ExplanationStreamOptions {
   model?: string
   apiKey?: string
   endpoint?: 'explain' | 'chat'
+  history?: Array<{ role: 'user' | 'assistant', content: string }>
   onStart?: () => void
   onChunk?: (text: string) => void
   onFinish?: (fullText: string) => void
@@ -20,6 +21,7 @@ export function useExplanationStream() {
     model,
     apiKey,
     endpoint = 'explain',
+    history,
     onStart,
     onChunk,
     onFinish,
@@ -33,8 +35,8 @@ export function useExplanationStream() {
     try {
       const backendUrl = `http://127.0.0.1:8000/${endpoint}`
       const payload = endpoint === 'chat'
-        ? { message: text, model, api_key: apiKey }
-        : { text, model, api_key: apiKey }
+        ? { message: text, model, api_key: apiKey, history }
+        : { text, model, api_key: apiKey, history }
 
       const response = await fetch(backendUrl, {
         method: 'POST',

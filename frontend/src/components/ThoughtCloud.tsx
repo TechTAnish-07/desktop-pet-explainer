@@ -7,6 +7,7 @@ interface ThoughtCloudProps {
   remainingSeconds: number
   autoHideSeconds: number
   isChatActive?: boolean
+  history?: Array<{ role: 'user' | 'assistant', content: string }>
   onChatActiveChange?: (active: boolean) => void
   onSendFollowUp?: (question: string, mode?: 'explain' | 'chat') => void
   onClose: () => void
@@ -18,6 +19,7 @@ export const ThoughtCloud: React.FC<ThoughtCloudProps> = ({
   remainingSeconds,
   autoHideSeconds,
   isChatActive,
+  history,
   onChatActiveChange,
   onSendFollowUp,
   onClose,
@@ -146,12 +148,39 @@ export const ThoughtCloud: React.FC<ThoughtCloudProps> = ({
         </div>
 
         {/* Explanation Content Area */}
-        <div className="max-h-56 overflow-y-auto custom-scrollbar pr-1.5 markdown-body">
+        <div className="max-h-64 overflow-y-auto custom-scrollbar pr-1.5 markdown-body space-y-3">
+          {history && history.length > 0 && (
+            <div className="space-y-3 pb-3 border-b border-slate-700/60">
+              {history.map((msg, idx) => (
+                <div
+                  key={idx}
+                  className={`p-2.5 rounded-2xl text-xs ${
+                    msg.role === 'user'
+                      ? 'bg-sky-500/20 border border-sky-400/40 text-sky-100 ml-6 shadow-inner'
+                      : 'bg-slate-900/85 border border-slate-700/80 text-slate-200 mr-4 shadow-md'
+                  }`}
+                >
+                  <div className="font-bold text-[10px] uppercase mb-1 tracking-wider opacity-75">
+                    {msg.role === 'user' ? '👤 You asked:' : '🐶 Nova:'}
+                  </div>
+                  <div>{renderFormattedMarkdown(msg.content)}</div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {content ? (
-            renderFormattedMarkdown(content)
+            <div className="pt-1">
+              {history && history.length > 0 && (
+                <div className="font-bold text-[10px] uppercase mb-1 tracking-wider text-emerald-400">
+                  🐶 Nova answering:
+                </div>
+              )}
+              {renderFormattedMarkdown(content)}
+            </div>
           ) : (
             <div className="flex items-center justify-center py-8 text-xs text-slate-400 animate-pulse">
-              Nova is analyzing the text...
+              {history && history.length > 0 ? 'Nova is thinking...' : 'Nova is analyzing the text...'}
             </div>
           )}
         </div>

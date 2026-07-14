@@ -13,7 +13,8 @@ async def stream_explanation(
     text: str,
     model: str | None = None,
     api_key: str | None = None,
-    context: str | None = None
+    context: str | None = None,
+    history: list[dict[str, str]] | None = None
 ) -> AsyncGenerator[str, None]:
     """
     Streams markdown explanation chunks using Server-Sent Events (SSE) format with Powerful Model.
@@ -30,7 +31,7 @@ async def stream_explanation(
 
     kwargs = {
         "model": selected_model,
-        "messages": build_explain_prompt(text, context),
+        "messages": build_explain_prompt(text, context, history),
         "stream": True,
     }
     if api_key:
@@ -53,7 +54,8 @@ async def stream_explanation(
 async def stream_chat(
     message: str,
     model: str | None = None,
-    api_key: str | None = None
+    api_key: str | None = None,
+    history: list[dict[str, str]] | None = None
 ) -> AsyncGenerator[str, None]:
     """
     Streams friendly chit-chat using Lightweight Conversation Model (e.g., gemini-2.5-flash-lite)
@@ -72,7 +74,7 @@ async def stream_chat(
 
     kwargs = {
         "model": selected_model,
-        "messages": build_chat_prompt(message, memories),
+        "messages": build_chat_prompt(message, memories, history),
         "stream": True,
     }
     if api_key:
