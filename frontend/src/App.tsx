@@ -70,6 +70,7 @@ export function App() {
       text: selectedText,
       model,
       apiKey,
+      endpoint: 'explain',
       onStart: () => {
         setPetState('thinking')
       },
@@ -113,6 +114,7 @@ export function App() {
       text: "Woof! 🐾 Hey buddy! I'm right here with you! What's on your mind today? Let's chat!",
       model,
       apiKey,
+      endpoint: 'chat',
       onStart: () => setPetState('talking'),
       onChunk: () => setPetState('talking'),
       onFinish: () => setPetState('idle'),
@@ -131,13 +133,19 @@ export function App() {
     }
   }
 
-  const handleSendFollowUp = (question: string) => {
+  const handleSendFollowUp = (question: string, mode?: 'explain' | 'chat') => {
     setPetState('thinking')
     setExplanationOpen(true)
+    const targetEndpoint = mode || 'explain'
+    const payloadText = targetEndpoint === 'chat'
+      ? question
+      : `Follow-up question regarding previous explanation:\nQuestion: ${question}\nOriginal context: ${selectedText}`
+
     startStream({
-      text: `Follow-up question regarding previous explanation:\nQuestion: ${question}\nOriginal context: ${selectedText}`,
+      text: payloadText,
       model,
       apiKey,
+      endpoint: targetEndpoint,
       onStart: () => setPetState('thinking'),
       onChunk: () => setPetState('talking'),
       onFinish: () => {

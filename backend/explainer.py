@@ -20,7 +20,7 @@ async def stream_explanation(
     Yields data formatted as SSE lines: 'data: {"chunk": "..."}\n\n'
     Finished event: 'data: [DONE]\n\n'
     """
-    selected_model = model or os.getenv("DEFAULT_EXPLAIN_MODEL", "gemini/gemini-2.5-pro")
+    selected_model = model or os.getenv("DEFAULT_EXPLAIN_MODEL", "gemini/gemini-2.5-flash")
 
     # If mock model or explicitly requested mock
     if selected_model.lower() == "mock":
